@@ -5,17 +5,16 @@ using System.Linq;
 
 public class Astar
 {
-    [SerializeField]
-    public int i_MaxLoops = 10000;
+    [SerializeField] public int i_MaxLoops = 10000;
+
+    [HideInInspector] protected int i_Loops = 0;
+
+    private List<Node> l_openNodes = new List<Node>();
+    private List<Node> l_closedNodes = new List<Node>();
 
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
     {
-        List<Node> openNodes = new List<Node>();
-        List<Node> closedNodes = new List<Node>();
-
-        openNodes.Add(new Node(startPos, null, 0, 0));
-
-        int loops = 0;
+        l_openNodes.Add(new Node(startPos, null, 0, 0));
 
         Dictionary<Vector2Int, Wall> directionToDirection = new Dictionary<Vector2Int, Wall>()
         {
@@ -25,17 +24,17 @@ public class Astar
             { new Vector2Int(-1, 0), Wall.LEFT }
         };
 
-        while (openNodes.Count > 0 && loops < i_MaxLoops)
+        while (l_openNodes.Count > 0 && i_Loops < i_MaxLoops)
         {
-            loops++;
+            i_Loops++;
 
-            openNodes = openNodes.OrderByDescending(x => x.FScore).ToList();
+            l_openNodes = l_openNodes.OrderByDescending(x => x.FScore).ToList();
 
-            Node current = openNodes[0];
+            Node current = l_openNodes[0];
 
-            openNodes.Remove(current);
+            l_openNodes.Remove(current);
 
-            closedNodes.Add(current);
+            l_closedNodes.Add(current);
 
             if (current.position == endPos)
             {
@@ -71,7 +70,7 @@ public class Astar
 
             foreach (var node in adjacent)
             {
-                if (closedNodes.Any(x => x.EqualTo(node)))
+                if (l_closedNodes.Any(x => x.EqualTo(node)))
                 {
                     continue;
                 }
@@ -80,20 +79,20 @@ public class Astar
 
                 node.HScore = Vector2Int.Distance(node.position, endPos);
 
-                if (openNodes.Any(x => x.EqualTo(node)))
+                if (l_openNodes.Any(x => x.EqualTo(node)))
                 {
-                    Node inList = openNodes.Where(x => x.EqualTo(node)).ToList()[0];
+                    Node inList = l_openNodes.Where(x => x.EqualTo(node)).ToList()[0];
 
                     if (inList.GScore < node.GScore)
                     {
-                        openNodes.Remove(inList);
+                        l_openNodes.Remove(inList);
 
-                        openNodes.Add(node);
+                        l_openNodes.Add(node);
                     }
                 }
                 else
                 {
-                    openNodes.Add(node);
+                    l_openNodes.Add(node);
                 }
             }
         }
@@ -115,6 +114,7 @@ public class Astar
         public bool EqualTo(Node a) => a.position == position;
 
         public Node() { }
+
         public Node(Vector2Int position, Node parent, int GScore, int HScore)
         {
             this.position = position;
